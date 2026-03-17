@@ -9,34 +9,29 @@ import java.util.PriorityQueue;
 /**
  * Event Scheduler
  *
- * <p>Scheduling system for a meeting platform.
+ * Scheduling system for a meeting platform.
  *
- * <ul>
- *   <li>{@link #canAttendAll}       — O(n log n): can one person attend every event?</li>
- *   <li>{@link #minRoomsRequired}   — O(n log n): minimum rooms needed for all events.</li>
- *   <li>{@link #assignRooms}        — O(n log n): assign a named room to every event.</li>
- * </ul>
+ * 
+ *   canAttendAll       — O(n log n): can one person attend every event?</li>
+ *   minRoomsRequired   — O(n log n): minimum rooms needed for all events.</li>
+ *   assignRooms      — O(n log n): assign a named room to every event.</li>
+ * 
  *
- * <p><b>Adjacent events</b> (where one ends exactly when the next begins) are
- * NOT considered overlapping — strict inequality check: {@code prevEnd > currStart}.
+ * Adjacent events (where one ends exactly when the next begins) are
+ * NOT considered overlapping — strict inequality check:  prevEnd > currStart.
  *
- * <pre>
+ * 
  * Example:
  *   EventScheduler s = new EventScheduler();
  *   int[][] events = {{9,10},{10,11},{11,12}};
  *   s.canAttendAll(events);       // true
  *   s.minRoomsRequired(events);   // 1
- * </pre>
+ * 
  */
 public class EventScheduler {
 
-    // -----------------------------------------------------------------------
-    // Inner record: ScheduledEvent
-    // -----------------------------------------------------------------------
-
-    /**
-     * An enriched event record returned by {@link #assignRooms}.
-     */
+    
+    //   An enriched event record returned by assignRooms.
     public static class ScheduledEvent {
         public final int    start;
         public final int    end;
@@ -56,21 +51,18 @@ public class EventScheduler {
         }
     }
 
-    // -----------------------------------------------------------------------
-    // Problem 2a: canAttendAll
-    // -----------------------------------------------------------------------
-
+    
     /**
-     * Returns {@code true} if a single person can attend every event
+     * Returns true if a single person can attend every event
      * without any time conflicts.
      *
-     * <p><b>Logic:</b> Sort events by start time. Walk consecutive pairs:
+     * Logic: Sort events by start time. Walk consecutive pairs:
      * if the previous event's end time is strictly greater than the next
      * event's start time, they overlap → return false.
-     * Adjacent events ({@code prevEnd == currStart}) are allowed.
+     * Adjacent events (prevEnd == currStart) are allowed.
      *
-     * <p>Time : O(n log n) — dominated by the sort; the scan is O(n).
-     * <br>Space: O(n) — sorted copy of the input array.
+     * Time : O(n log n) — dominated by the sort; the scan is O(n).
+     * Space: O(n) — sorted copy of the input array.
      *
      * @param events array of {start, end} pairs
      * @return true if all events are attendable without overlap
@@ -92,34 +84,30 @@ public class EventScheduler {
         return true;
     }
 
-    // -----------------------------------------------------------------------
-    // Problem 2b: minRoomsRequired
-    // -----------------------------------------------------------------------
+    
 
     /**
      * Returns the minimum number of rooms needed to host all events
      * simultaneously, with no two overlapping events sharing a room.
      *
-     * <p><b>Logic:</b> Sort events by start time. Maintain a min-heap of
+     * Logic: Sort events by start time. Maintain a min-heap of
      * end times of currently-running events (one slot per room in use).
      *
-     * <p>For each new event:
-     * <ul>
-     *   <li>If the earliest-ending room finishes at or before this event
-     *       starts ({@code heap.peek() <= currStart}), that room is free —
-     *       pop it and reuse it for the new event.</li>
-     *   <li>Otherwise every room is still occupied — allocate a new one.</li>
-     * </ul>
+     * For each new event:
+     *   If the earliest-ending room finishes at or before this event
+     *       starts (heap.peek() <= currStart), that room is free —
+     *       pop it and reuse it for the new event.
+     *       Otherwise every room is still occupied — allocate a new one.
      *
-     * <p>Push this event's end time onto the heap. The heap size at the end
+     * Push this event's end time onto the heap. The heap size at the end
      * equals the number of rooms needed.
      *
-     * <p>Why a min-heap? We only care whether the <i>soonest-ending</i> room
+     * Why a min-heap? We only care whether the soonest-ending room
      * is free. A min-heap gives us that in O(1) peek and O(log n) push/poll,
      * which is cheaper than re-scanning a plain list each time.
      *
-     * <p>Time : O(n log n) — sort + n heap operations each costing O(log n).
-     * <br>Space: O(n) — heap holds at most n end times.
+     * Time : O(n log n) — sort + n heap operations each costing O(log n).
+     * Space: O(n) — heap holds at most n end times.
      *
      * @param events array of {start, end} pairs
      * @return minimum number of rooms required
@@ -148,25 +136,22 @@ public class EventScheduler {
         return endTimes.size();
     }
 
-    // -----------------------------------------------------------------------
-    // Future-proof extension: assignRooms
-    // -----------------------------------------------------------------------
-
+    
     /**
      * Assigns a specific named room to each event and returns the schedule.
      *
-     * <p><b>Strategy:</b> The heap now stores {@code (endTime, roomLabel)} pairs.
+     * Strategy: The heap now stores (endTime, roomLabel) pairs.
      * When a room frees up we pop it, grab its label, and reuse it for the
      * next event. New rooms are named sequentially: "Room A", "Room B", …
      * "Room Z", then "Room AA", "Room AB", … (spreadsheet-style), so the
      * scheduler never runs out of unique names.
      *
-     * <p>Time : O(n log n)
-     * <br>Space: O(n)
+     * Time : O(n log n)
+     * Space: O(n)
      *
      * @param events     array of {start, end} pairs
      * @param roomPrefix prefix string for room labels (e.g. "Room", "Conf")
-     * @return list of {@link ScheduledEvent} sorted by start time
+     * @return list of  ScheduledEvent sorted by start time
      */
     public List<ScheduledEvent> assignRooms(int[][] events, String roomPrefix) {
         List<ScheduledEvent> result = new ArrayList<>();
@@ -209,26 +194,22 @@ public class EventScheduler {
         return result;
     }
 
-    /**
-     * Convenience overload using "Room" as the default prefix.
-     */
+    
+    //   Convenience overload using "Room" as the default prefix.
+
     public List<ScheduledEvent> assignRooms(int[][] events) {
         return assignRooms(events, "Room");
     }
 
-    // -----------------------------------------------------------------------
-    // Private helpers
-    // -----------------------------------------------------------------------
-
+    
     /**
      * Converts a zero-based index to a spreadsheet-style column name.
      *
-     * <pre>
      * 0  → "A"
      * 25 → "Z"
      * 26 → "AA"
      * 51 → "AZ"
-     * </pre>
+     * 
      *
      * This ensures the scheduler never runs out of unique room names
      * regardless of how many concurrent rooms are needed.
