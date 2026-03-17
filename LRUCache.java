@@ -7,32 +7,29 @@ import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
- * LRU Cache — Clean OOP Java Implementation
+ * LRU Cache implementation.
  *
- * <p>Three implementations provided:
- * <ol>
- *   <li>{@link LRUCache}           — Hand-rolled HashMap + Doubly Linked List. O(1) get/put.</li>
- *   <li>{@link LRUCacheSimple}     — Java's LinkedHashMap with access-order mode. Same complexity.</li>
- *   <li>{@link ThreadSafeLRUCache} — ReentrantLock wrapper around LRUCache for concurrent use.</li>
- * </ol>
+ * Three implementations provided:
+ * 
+ *   LRUCache          — Hand-rolled HashMap + Doubly Linked List. O(1) get/put
+ *   LRUCacheSimple    — Java's LinkedHashMap with access-order mode. Same complexity
+ *   ThreadSafeLRUCache — ReentrantLock wrapper around LRUCache for concurrent use
+ * 
  *
- * <pre>
  * Complexity summary
  * ------------------
  *             get     put     space
  * LRUCache    O(1)    O(1)    O(capacity)
- * </pre>
+
  */
 public class LRUCache<K, V> {
 
-    // -----------------------------------------------------------------------
-    // Building block: Doubly Linked List Node
-    // -----------------------------------------------------------------------
+    
 
     /**
      * A single node in the doubly linked list.
      *
-     * <p>Stores both key AND value so that during eviction we can remove
+     * Stores both key AND value so that during eviction we can remove
      * the tail node from the HashMap in O(1) — the key is right on the node,
      * no reverse lookup needed.
      */
@@ -48,23 +45,18 @@ public class LRUCache<K, V> {
         }
     }
 
-    // -----------------------------------------------------------------------
-    // Fields
-    // -----------------------------------------------------------------------
+   
 
     private final int capacity;
     private final HashMap<K, Node<K, V>> map;
 
-    /** Sentinel head — MRU side. Never holds real data. */
+    // entinel head — MRU side. Never holds real data. 
     private final Node<K, V> head;
 
-    /** Sentinel tail — LRU side. Never holds real data. */
+    //  Sentinel tail — LRU side. Never holds real data. 
     private final Node<K, V> tail;
 
-    // -----------------------------------------------------------------------
-    // Constructor
-    // -----------------------------------------------------------------------
-
+    
     /**
      * Creates an LRU Cache with the given capacity.
      *
@@ -85,17 +77,15 @@ public class LRUCache<K, V> {
         tail.prev = head;
     }
 
-    // -----------------------------------------------------------------------
-    // Public API
-    // -----------------------------------------------------------------------
+   
 
     /**
      * Returns the value for the given key, or null if not present.
      *
-     * <p>Marks the key as most-recently-used by moving its node to the
+     * Marks the key as most-recently-used by moving its node to the
      * front of the list.
      *
-     * <p>Time complexity: O(1)
+     * Time complexity: O(1)
      *
      * @param key the lookup key
      * @return associated value, or null if absent
@@ -112,11 +102,11 @@ public class LRUCache<K, V> {
     /**
      * Inserts or updates the key with the given value.
      *
-     * <p>If the key already exists, its value is updated and it becomes MRU.
+     * If the key already exists, its value is updated and it becomes MRU.
      * If the cache is at capacity, the least-recently-used entry is evicted
      * before the new entry is inserted.
      *
-     * <p>Time complexity: O(1)
+     * Time complexity: O(1)
      *
      * @param key   the key
      * @param value the value to store
@@ -138,13 +128,11 @@ public class LRUCache<K, V> {
         insertAtFront(newNode);
     }
 
-    // -----------------------------------------------------------------------
-    // Convenience / introspection
-    // -----------------------------------------------------------------------
+    
 
-    /**
-     * Returns the current number of entries in the cache.
-     */
+    
+    //  Returns the current number of entries in the cache.
+    
     public int size() {
         return map.size();
     }
@@ -181,11 +169,9 @@ public class LRUCache<K, V> {
         return order;
     }
 
-    // -----------------------------------------------------------------------
-    // Private DLL helpers — all O(1)
-    // -----------------------------------------------------------------------
+    
 
-    /** Insert node immediately after the head sentinel (MRU position). */
+    // Insert node immediately after the head sentinel (MRU position). 
     private void insertAtFront(Node<K, V> node) {
         node.prev      = head;
         node.next      = head.next;
@@ -193,19 +179,19 @@ public class LRUCache<K, V> {
         head.next      = node;
     }
 
-    /** Unlink node from wherever it sits in the list. */
+    // Unlink node from wherever it sits in the list. 
     private void remove(Node<K, V> node) {
         node.prev.next = node.next;
         node.next.prev = node.prev;
     }
 
-    /** Move an existing node to the MRU position. */
+    //  Move an existing node to the MRU position. 
     private void moveToFront(Node<K, V> node) {
         remove(node);
         insertAtFront(node);
     }
 
-    /** Remove the least-recently-used node (just before tail sentinel). */
+    //  Remove the least-recently-used node (just before tail sentinel). 
     private void evictLRU() {
         Node<K, V> lruNode = tail.prev;
         if (lruNode == head) return;   // empty — should never happen
@@ -214,23 +200,21 @@ public class LRUCache<K, V> {
     }
 
 
-    // =======================================================================
-    // Reference implementation: LinkedHashMap (access-order mode)
-    // =======================================================================
+    
 
     /**
-     * LRU Cache using Java's {@link LinkedHashMap} in access-order mode.
+     * LRU Cache using Java's LinkedHashMap in access-order mode.
      *
-     * <p>{@code LinkedHashMap(capacity, loadFactor, accessOrder=true)} maintains
-     * insertion order by default; with {@code accessOrder=true} it reorders on
+     *  LinkedHashMap(capacity, loadFactor, accessOrder=true) maintains
+     * insertion order by default; with  accessOrder=true it reorders on
      * every get/put, which is exactly LRU semantics. Overriding
-     * {@code removeEldestEntry} triggers automatic eviction at capacity.
+     * removeEldestEntry  triggers automatic eviction at capacity.
      *
-     * <p>Semantically identical to {@link LRUCache} but in fewer lines.
+     * Semantically identical to LRUCache but in fewer lines.
      * Shown here to demonstrate library awareness; the hand-rolled version
      * above is preferred for interviews because it reveals the mechanism.
      *
-     * <p>Complexity: O(1) get, O(1) put — same as {@link LRUCache}.
+     * Complexity: O(1) get, O(1) put — same as  LRUCache.
      */
     public static class LRUCacheSimple<K, V> {
 
@@ -257,29 +241,26 @@ public class LRUCache<K, V> {
     }
 
 
-    // =======================================================================
-    // Concurrency extension: thread-safe wrapper
-    // =======================================================================
+    
 
     /**
      * Thread-safe LRU Cache.
      *
-     * <p>Wraps {@link LRUCache} with a {@link ReentrantLock} so that
-     * {@code get} and {@code put} are each executed atomically.
+     * Wraps  LRUCache with a  ReentrantLock so that
+     * get and  put are each executed atomically.
      * No two threads can mutate the DLL or the HashMap simultaneously.
      *
-     * <p><b>Trade-off</b>: A single coarse-grained lock serialises ALL
-     * operations. For read-heavy workloads, a {@link java.util.concurrent.locks.ReadWriteLock}
+     * Trade-off: A single coarse-grained lock serialises ALL
+     * operations. For read-heavy workloads, a  java.util.concurrent.locks.ReadWriteLock
      * would allow concurrent reads. For very high throughput, sharding the
      * cache into N independent instances (each with its own lock) reduces
      * contention by a factor of N.
      *
-     * <pre>
+     * 
      * Usage:
      *   ThreadSafeLRUCache<Integer, String> cache = new ThreadSafeLRUCache<>(128);
      *   cache.put(1, "A");
      *   cache.get(1);  // returns "A"
-     * </pre>
      */
     public static class ThreadSafeLRUCache<K, V> {
 
